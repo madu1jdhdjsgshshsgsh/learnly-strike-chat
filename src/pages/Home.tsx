@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Home = () => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -26,22 +27,34 @@ const Home = () => {
     }
     
     setIsUploading(true);
+    setUploadProgress(0);
     
-    // In a real app, you would upload to a storage service here
-    // For now, we'll simulate an upload
-    setTimeout(() => {
-      setIsUploading(false);
-      
-      // Reset the file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      
-      toast({
-        title: "Video uploaded",
-        description: "Your educational video has been uploaded successfully and is pending review.",
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setUploadProgress(prev => {
+        const newProgress = prev + 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          
+          // Reset the file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+          
+          // Complete the upload
+          setTimeout(() => {
+            setIsUploading(false);
+            toast({
+              title: "Video uploaded",
+              description: "Your educational video has been uploaded successfully and is pending review.",
+            });
+          }, 500);
+          
+          return 100;
+        }
+        return newProgress;
       });
-    }, 2000);
+    }, 300);
   };
 
   const triggerFileUpload = () => {
@@ -72,7 +85,7 @@ const Home = () => {
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  Uploading {uploadProgress}%
                 </>
               ) : (
                 <>
@@ -83,6 +96,14 @@ const Home = () => {
             </Button>
           </div>
         </div>
+        {isUploading && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6 dark:bg-gray-700">
+            <div 
+              className="bg-strike-500 h-2.5 rounded-full transition-all duration-300" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        )}
         <RecommendedVideos />
       </main>
     </div>
