@@ -34,6 +34,15 @@ const RegisterForm = () => {
     // In a real app, this would be an actual registration call
     setTimeout(() => {
       setLoading(false);
+      
+      // Store authentication status in localStorage
+      localStorage.setItem("userAuth", JSON.stringify({
+        email,
+        fullName,
+        isAuthenticated: true,
+        timestamp: new Date().toISOString()
+      }));
+      
       toast({
         title: "Registration successful",
         description: "Your account has been created!",

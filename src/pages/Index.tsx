@@ -1,10 +1,20 @@
 
 import { Navigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const Index = () => {
-  // In a real application, you would check if the user is authenticated here
-  // For now, we'll simply redirect to the login page
-  const isAuthenticated = false;
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
+  // Check for persistent authentication on component mount
+  useEffect(() => {
+    const userAuth = localStorage.getItem("userAuth");
+    setIsAuthenticated(!!userAuth);
+  }, []);
+
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   if (isAuthenticated) {
     return <Navigate to="/home" replace />;

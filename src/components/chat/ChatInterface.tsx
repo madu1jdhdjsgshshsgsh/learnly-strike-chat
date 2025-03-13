@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Paperclip, Lightbulb, Book, Calculator, Loader2, MicIcon, StopCircle } from "lucide-react";
+import { Send, Paperclip, Lightbulb, Book, Calculator, Loader2, MicIcon, StopCircle, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,11 @@ type MessageType = {
   sender: "user" | "assistant";
   timestamp: Date;
   isLoading?: boolean;
+  attachment?: {
+    type: "video" | "image" | "document";
+    url: string;
+    name: string;
+  };
 };
 
 type ChatCategory = "homework" | "concept" | "exam" | "general";
@@ -35,6 +40,8 @@ const ChatInterface = () => {
   const { toast } = useToast();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -148,6 +155,19 @@ const ChatInterface = () => {
   const generateResponse = (userMessage: string, category: ChatCategory): string => {
     const lowercaseMessage = userMessage.toLowerCase();
     
+    // Special handling for physics formulas
+    if (lowercaseMessage.includes("formula") && lowercaseMessage.includes("force")) {
+      return "The formula for force is:\n\n**F = m × a**\n\nWhere:\n- F is force (measured in Newtons, N)\n- m is mass (measured in kilograms, kg)\n- a is acceleration (measured in meters per second squared, m/s²)\n\nThis is Newton's Second Law of Motion, which states that the force acting on an object is equal to the mass of that object times its acceleration.\n\nWould you like me to explain this further or provide examples?";
+    }
+    
+    if (lowercaseMessage.includes("formula") && lowercaseMessage.includes("gravity")) {
+      return "The formula for gravitational force is:\n\n**F = G × (m₁ × m₂) / r²**\n\nWhere:\n- F is the gravitational force between the objects (measured in Newtons, N)\n- G is the gravitational constant (6.674 × 10⁻¹¹ N·m²/kg²)\n- m₁ and m₂ are the masses of the objects (measured in kilograms, kg)\n- r is the distance between the centers of the masses (measured in meters, m)\n\nThis formula represents Newton's Law of Universal Gravitation.";
+    }
+    
+    if (lowercaseMessage.includes("formula") && lowercaseMessage.includes("energy") && (lowercaseMessage.includes("kinetic") || lowercaseMessage.includes("motion"))) {
+      return "The formula for kinetic energy is:\n\n**KE = ½ × m × v²**\n\nWhere:\n- KE is kinetic energy (measured in Joules, J)\n- m is mass (measured in kilograms, kg)\n- v is velocity (measured in meters per second, m/s)\n\nKinetic energy is the energy an object possesses due to its motion.";
+    }
+    
     // General responses based on categories
     switch(category) {
       case "homework":
@@ -212,6 +232,79 @@ const ChatInterface = () => {
       title: `Chat mode changed to ${newCategory}`,
       description: `AI responses will now focus on ${newCategory} assistance.`,
     });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    
+    // Determine file type
+    let fileType: "video" | "image" | "document" = "document";
+    if (file.type.startsWith("video/")) {
+      fileType = "video";
+    } else if (file.type.startsWith("image/")) {
+      fileType = "image";
+    }
+    
+    // In a real app, you would upload to a storage service here
+    // For now, we'll simulate an upload with a local URL
+    setTimeout(() => {
+      const fileUrl = URL.createObjectURL(file);
+      
+      // Add message with attachment
+      const userMessage: MessageType = {
+        id: Date.now().toString(),
+        content: `I've uploaded a ${fileType}: ${file.name}`,
+        sender: "user",
+        timestamp: new Date(),
+        attachment: {
+          type: fileType,
+          url: fileUrl,
+          name: file.name
+        }
+      };
+      
+      setMessages((prev) => [...prev, userMessage]);
+      
+      // Add assistant response
+      if (fileType === "video") {
+        const assistantMessage: MessageType = {
+          id: Date.now().toString() + "-response",
+          content: "I've received your video. Is there anything specific you'd like me to help with regarding this content?",
+          sender: "assistant",
+          timestamp: new Date()
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        const assistantMessage: MessageType = {
+          id: Date.now().toString() + "-response",
+          content: `I've received your ${fileType}. How can I help you with this?`,
+          sender: "assistant",
+          timestamp: new Date()
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
+      
+      setIsUploading(false);
+      
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
+      toast({
+        title: "File uploaded",
+        description: `Your ${fileType} has been uploaded successfully.`,
+      });
+    }, 1500);
+  };
+
+  const triggerFileUpload = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -292,7 +385,44 @@ const ChatInterface = () => {
                         <span className="text-sm">Thinking...</span>
                       </div>
                     ) : (
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                      <>
+                        <div className="whitespace-pre-wrap">{msg.content}</div>
+                        {msg.attachment && (
+                          <div className="mt-2">
+                            {msg.attachment.type === "video" && (
+                              <video 
+                                src={msg.attachment.url} 
+                                controls 
+                                className="max-w-full rounded-md max-h-60 mt-2"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            )}
+                            {msg.attachment.type === "image" && (
+                              <img 
+                                src={msg.attachment.url} 
+                                alt={msg.attachment.name}
+                                className="max-w-full rounded-md max-h-60 mt-2"
+                              />
+                            )}
+                            {msg.attachment.type === "document" && (
+                              <div className="bg-muted p-2 rounded-md mt-2 flex items-center">
+                                <span className="text-sm truncate">
+                                  {msg.attachment.name}
+                                </span>
+                                <a 
+                                  href={msg.attachment.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="ml-2 text-strike-500 hover:text-strike-600 text-xs"
+                                >
+                                  View
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                     <div
                       className={`text-xs mt-1 ${
@@ -330,43 +460,46 @@ const ChatInterface = () => {
               variant="outline"
               size="sm"
               className="rounded-full"
-              onClick={() => handleQuickQuestion("Can you explain derivatives in calculus?")}
+              onClick={() => handleQuickQuestion("What's the formula for force in physics?")}
             >
               <Calculator className="mr-1 h-3 w-3" />
-              Calculus derivatives
+              Force formula
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="rounded-full"
-              onClick={() => handleQuickQuestion("Help me with Python functions")}
+              onClick={() => handleQuickQuestion("Explain Newton's laws of motion")}
             >
               <Book className="mr-1 h-3 w-3" />
-              Python functions
+              Newton's laws
             </Button>
             <Button
               variant="outline"
               size="sm"
               className="rounded-full"
-              onClick={() => handleQuickQuestion("How should I prepare for my exam next week?")}
+              onClick={() => handleQuickQuestion("How can I solve quadratic equations?")}
             >
               <Lightbulb className="mr-1 h-3 w-3" />
-              Exam preparation
+              Quadratic equations
             </Button>
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileUpload}
+            accept="video/*,image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          />
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              toast({
-                title: "Feature coming soon",
-                description: "File upload feature is not available yet.",
-              });
-            }}
+            onClick={triggerFileUpload}
+            disabled={isUploading}
           >
-            <Paperclip className="h-5 w-5" />
+            {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
           </Button>
           <Button
             variant="ghost"

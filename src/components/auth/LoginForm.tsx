@@ -22,10 +22,19 @@ const LoginForm = () => {
     // In a real app, this would be an actual authentication call
     setTimeout(() => {
       setLoading(false);
+      
+      // Store authentication status in localStorage
+      localStorage.setItem("userAuth", JSON.stringify({
+        email,
+        isAuthenticated: true,
+        timestamp: new Date().toISOString()
+      }));
+      
       toast({
         title: "Login successful",
         description: "Welcome back to Strike!",
       });
+      
       // Check if user has completed onboarding
       const hasCompletedOnboarding = false; // This would be from your auth system
       if (hasCompletedOnboarding) {
