@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Pages
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -24,6 +25,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Index Route - will redirect to login or home */}
+          <Route path="/" element={<Index />} />
+          
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -36,9 +40,6 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/ai-companion" element={<AICompanionPage />} />
           <Route path="/chat" element={<Chat />} />
-          
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
