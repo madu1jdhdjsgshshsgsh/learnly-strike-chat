@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -97,6 +98,27 @@ export const useChat = () => {
 
   const fetchGeminiResponse = async (prompt: string): Promise<string> => {
     try {
+      // Construct context-aware prompt based on category
+      let contextPrompt = "";
+      
+      switch(category) {
+        case "homework":
+          contextPrompt = "You are helping with homework. ";
+          break;
+        case "concept":
+          contextPrompt = "You are explaining an educational concept. ";
+          break;
+        case "exam":
+          contextPrompt = "You are helping with exam preparation. ";
+          break;
+        default:
+          contextPrompt = "You are a helpful AI assistant. ";
+      }
+      
+      const fullPrompt = contextPrompt + prompt;
+      
+      console.log("Sending request to Gemini API...");
+      
       const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
         method: 'POST',
         headers: {
@@ -106,7 +128,7 @@ export const useChat = () => {
           contents: [
             {
               parts: [
-                { text: prompt }
+                { text: fullPrompt }
               ]
             }
           ],
@@ -119,6 +141,8 @@ export const useChat = () => {
         }),
       });
 
+      console.log("Gemini API response status:", response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Gemini API error:", errorData);
@@ -126,6 +150,13 @@ export const useChat = () => {
       }
 
       const data = await response.json();
+      console.log("Gemini API response received");
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        console.error("Unexpected Gemini API response format:", data);
+        throw new Error("Unexpected API response format");
+      }
+      
       return data.candidates[0].content.parts[0].text || "I don't have an answer for that.";
     } catch (error) {
       console.error("Error fetching from Gemini API:", error);
@@ -274,11 +305,13 @@ export const useChat = () => {
   const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim()) return;
 
+    // Add user message
     addMessage({
       content: messageContent,
       sender: "user",
     });
 
+    // Add loading message
     const loadingId = Date.now().toString() + "-loading";
     setMessages((prev) => [
       ...prev,
@@ -293,20 +326,24 @@ export const useChat = () => {
     setIsTyping(true);
 
     try {
+      console.log("Requesting response for:", messageContent);
       const responseContent = await fetchGeminiResponse(messageContent);
       
+      // Remove loading message
       setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
       
+      // Add response message
       addMessage({
         content: responseContent,
         sender: "assistant",
       });
-      
     } catch (error) {
       console.error("Error getting response:", error);
       
+      // Remove loading message
       setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
       
+      // Use fallback response
       const fallbackResponse = generateFallbackResponse(messageContent, category);
       
       addMessage({
