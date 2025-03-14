@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export type MessageType = {
@@ -15,6 +15,9 @@ export type MessageType = {
 };
 
 export type ChatCategory = "general" | "homework" | "concept" | "exam";
+
+const GEMINI_API_KEY = "AIzaSyA80v0F1D4MJOzCIlw6tBwkRQgV80d0KVk";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
 
 export const useChat = () => {
   const [messages, setMessages] = useState<MessageType[]>([
@@ -46,14 +49,12 @@ export const useChat = () => {
 
   const toggleRecording = async () => {
     if (isRecording) {
-      // Stop recording
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
         setIsRecording(false);
       }
     } else {
       try {
-        // Start recording
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
@@ -67,15 +68,11 @@ export const useChat = () => {
 
         mediaRecorder.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-          // Here you would normally send this to a speech-to-text service
-          // For now, we'll just simulate the process
-          
           toast({
             title: "Voice recorded",
             description: "Your voice has been converted to text. You can edit before sending.",
           });
           
-          // Clean up the stream tracks
           stream.getTracks().forEach(track => track.stop());
           
           return "I have a question about...";
@@ -98,15 +95,51 @@ export const useChat = () => {
     }
   };
 
-  const generateResponse = (userMessage: string, category: ChatCategory): string => {
+  const fetchGeminiResponse = async (prompt: string): Promise<string> => {
+    try {
+      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                { text: prompt }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 1024,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Gemini API error:", errorData);
+        throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
+      }
+
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text || "I don't have an answer for that.";
+    } catch (error) {
+      console.error("Error fetching from Gemini API:", error);
+      return "I'm sorry, I encountered an error while processing your request. Please try again.";
+    }
+  };
+
+  const generateFallbackResponse = (userMessage: string, category: ChatCategory): string => {
     const lowercaseMessage = userMessage.toLowerCase();
     
-    // Handle physics formulas more comprehensively
     if (lowercaseMessage.includes("formula") && lowercaseMessage.includes("force")) {
       return "The formula for force is:\n\n**F = m × a**\n\nWhere:\n- F is force (measured in Newtons, N)\n- m is mass (measured in kilograms, kg)\n- a is acceleration (measured in meters per second squared, m/s²)\n\nThis is Newton's Second Law of Motion, which states that the force acting on an object is equal to the mass of that object times its acceleration.\n\nOther related force formulas include:\n- Weight: W = m × g (where g is gravitational acceleration, approximately 9.8 m/s² on Earth)\n- Spring force: F = -k × x (where k is the spring constant and x is displacement)\n- Friction: F = μ × N (where μ is the coefficient of friction and N is the normal force)";
     }
     
-    // Add more knowledge domains
     if (lowercaseMessage.includes("capital of")) {
       if (lowercaseMessage.includes("france")) return "The capital of France is Paris.";
       if (lowercaseMessage.includes("japan")) return "The capital of Japan is Tokyo.";
@@ -130,7 +163,6 @@ export const useChat = () => {
       return "I can provide population information. Could you specify which country or region you're asking about?";
     }
     
-    // Science questions
     if (lowercaseMessage.includes("how many planets")) {
       return "There are eight planets in our solar system: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune. Pluto was reclassified as a dwarf planet in 2006.";
     }
@@ -139,7 +171,6 @@ export const useChat = () => {
       return "DNA (deoxyribonucleic acid) is the genetic material that carries the instructions for the development, functioning, growth, and reproduction of all known organisms. It consists of two strands coiled around each other in a double helix structure. The information in DNA is stored as a code made up of four chemical bases: adenine (A), guanine (G), cytosine (C), and thymine (T).";
     }
     
-    // History questions
     if (lowercaseMessage.includes("world war")) {
       if (lowercaseMessage.includes("1")) {
         return "World War I (WWI) was a global conflict that lasted from 1914 to 1918. It involved the world's great powers, assembled in two opposing alliances: the Allies (centered around the Triple Entente of Britain, France, and Russia) and the Central Powers (originally centered around the Triple Alliance of Germany, Austria-Hungary, and Italy). More than 70 million military personnel were mobilized and over 9 million combatants died.";
@@ -150,7 +181,6 @@ export const useChat = () => {
       return "I can provide information about World War I (1914-1918) or World War II (1939-1945). Which one would you like to know about?";
     }
     
-    // Keep the original category-based responses for educational topics
     switch(category) {
       case "homework":
         if (lowercaseMessage.includes("math") || lowercaseMessage.includes("equation") || lowercaseMessage.includes("problem")) {
@@ -180,7 +210,6 @@ export const useChat = () => {
         }
         
       default: // general
-        // Add a more comprehensive general response like Gemini
         return "I'm your AI assistant, similar to Google Gemini. I can help answer questions about a wide range of topics including science, history, math, current events, and more. I can also assist with educational topics, homework help, and exam preparation.\n\nTo give you a more helpful response, could you provide more details about what you'd like to know?";
     }
   };
@@ -191,7 +220,6 @@ export const useChat = () => {
     
     setIsUploading(true);
     
-    // Determine file type
     let fileType: "video" | "image" | "document" = "document";
     if (file.type.startsWith("video/")) {
       fileType = "video";
@@ -199,12 +227,9 @@ export const useChat = () => {
       fileType = "image";
     }
     
-    // In a real app, you would upload to a storage service here
-    // For now, we'll simulate an upload with a local URL
     setTimeout(() => {
       const fileUrl = URL.createObjectURL(file);
       
-      // Add message with attachment
       const userMessage: MessageType = {
         id: Date.now().toString(),
         content: `I've uploaded a ${fileType}: ${file.name}`,
@@ -219,7 +244,6 @@ export const useChat = () => {
       
       setMessages((prev) => [...prev, userMessage]);
       
-      // Add assistant response
       const assistantMessage: MessageType = {
         id: Date.now().toString() + "-response",
         content: `I've received your ${fileType}. How can I help you with this?`,
@@ -230,7 +254,6 @@ export const useChat = () => {
       
       setIsUploading(false);
       
-      // Reset the file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -248,16 +271,14 @@ export const useChat = () => {
     }
   };
 
-  const sendMessage = (messageContent: string) => {
+  const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim()) return;
 
-    // Add user message
     addMessage({
       content: messageContent,
       sender: "user",
     });
 
-    // Add loading message
     const loadingId = Date.now().toString() + "-loading";
     setMessages((prev) => [
       ...prev,
@@ -271,21 +292,36 @@ export const useChat = () => {
     ]);
     setIsTyping(true);
 
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      // Remove loading message and add actual response
+    try {
+      const responseContent = await fetchGeminiResponse(messageContent);
+      
       setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
-
-      // Generate a response based on the question and selected category
-      let responseContent = generateResponse(messageContent, category);
       
       addMessage({
         content: responseContent,
         sender: "assistant",
       });
       
+    } catch (error) {
+      console.error("Error getting response:", error);
+      
+      setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
+      
+      const fallbackResponse = generateFallbackResponse(messageContent, category);
+      
+      addMessage({
+        content: fallbackResponse,
+        sender: "assistant",
+      });
+      
+      toast({
+        title: "Connection issue",
+        description: "Using offline response mode. Check your internet connection.",
+        variant: "destructive",
+      });
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return {

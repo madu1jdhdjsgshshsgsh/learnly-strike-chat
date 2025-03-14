@@ -11,7 +11,7 @@ const ChatHeader = ({ category, onCategoryChange }: ChatHeaderProps) => {
   return (
     <div className="p-4 border-b bg-muted/30">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">AI Assistant (Gemini-like)</h2>
+        <h2 className="text-xl font-semibold">AI Assistant (Powered by Gemini API)</h2>
         <div className="flex gap-2">
           <Button 
             variant={category === "general" ? "default" : "outline"} 
