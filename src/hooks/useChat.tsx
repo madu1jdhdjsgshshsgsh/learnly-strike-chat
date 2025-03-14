@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -98,7 +97,6 @@ export const useChat = () => {
 
   const fetchGeminiResponse = async (prompt: string): Promise<string> => {
     try {
-      // Construct context-aware prompt based on category
       let contextPrompt = "";
       
       switch(category) {
@@ -119,45 +117,60 @@ export const useChat = () => {
       
       console.log("Sending request to Gemini API...");
       
-      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      const apiUrl = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
+      console.log("API URL (without key):", GEMINI_API_URL);
+      
+      const requestBody = {
+        contents: [
+          {
+            parts: [
+              { text: fullPrompt }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+      };
+      
+      console.log("Request payload:", JSON.stringify(requestBody));
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: fullPrompt }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log("Gemini API response status:", response.status);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Gemini API error:", errorData);
-        throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
+        const errorText = await response.text();
+        console.error("Gemini API error response:", errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          console.error("Gemini API error:", errorData);
+          throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
+        } catch (e) {
+          throw new Error(`Gemini API error: Status ${response.status}`);
+        }
       }
 
       const data = await response.json();
-      console.log("Gemini API response received");
+      console.log("Gemini API response received:", data);
       
       if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
         console.error("Unexpected Gemini API response format:", data);
         throw new Error("Unexpected API response format");
       }
       
-      return data.candidates[0].content.parts[0].text || "I don't have an answer for that.";
+      const textResponse = data.candidates[0].content.parts?.[0]?.text;
+      return textResponse || "I don't have an answer for that.";
     } catch (error) {
       console.error("Error fetching from Gemini API:", error);
       return "I'm sorry, I encountered an error while processing your request. Please try again.";
@@ -305,13 +318,11 @@ export const useChat = () => {
   const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim()) return;
 
-    // Add user message
     addMessage({
       content: messageContent,
       sender: "user",
     });
 
-    // Add loading message
     const loadingId = Date.now().toString() + "-loading";
     setMessages((prev) => [
       ...prev,
@@ -329,10 +340,8 @@ export const useChat = () => {
       console.log("Requesting response for:", messageContent);
       const responseContent = await fetchGeminiResponse(messageContent);
       
-      // Remove loading message
       setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
       
-      // Add response message
       addMessage({
         content: responseContent,
         sender: "assistant",
@@ -340,10 +349,8 @@ export const useChat = () => {
     } catch (error) {
       console.error("Error getting response:", error);
       
-      // Remove loading message
       setMessages((prev) => prev.filter((msg) => msg.id !== loadingId));
       
-      // Use fallback response
       const fallbackResponse = generateFallbackResponse(messageContent, category);
       
       addMessage({
