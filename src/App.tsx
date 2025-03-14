@@ -14,6 +14,7 @@ import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import AICompanionPage from "./pages/AICompanionPage";
 import Chat from "./pages/Chat";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/home" element={<Home />} />
           <Route path="/ai-companion" element={<AICompanionPage />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/settings" element={<Settings />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
