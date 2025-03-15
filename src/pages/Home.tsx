@@ -1,7 +1,7 @@
 
 import { useState, useRef } from "react";
-import Navbar from "@/components/layout/Navbar";
-import RecommendedVideos from "@/components/home/RecommendedVideos";
+import { Layout } from "@/components/layout/Layout";
+import EnhancedRecommendations from "@/components/home/EnhancedRecommendations";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -64,11 +64,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-6">
+    <Layout>
+      <main className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Recommended for you</h1>
+          <h1 className="text-2xl font-bold">Welcome to your learning dashboard</h1>
           <div>
             <input
               type="file"
@@ -104,9 +103,9 @@ const Home = () => {
             ></div>
           </div>
         )}
-        <RecommendedVideos />
+        <EnhancedRecommendations />
       </main>
-    </div>
+    </Layout>
   );
 };
 

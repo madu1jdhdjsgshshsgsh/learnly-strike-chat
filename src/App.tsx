@@ -15,6 +15,7 @@ import Home from "./pages/Home";
 import AICompanionPage from "./pages/AICompanionPage";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/ai-companion" element={<AICompanionPage />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
