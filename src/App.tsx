@@ -1,8 +1,7 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Query, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Pages
@@ -17,6 +16,7 @@ import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Shorts from "./pages/Shorts";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +40,7 @@ const App = () => (
           
           {/* App Routes */}
           <Route path="/home" element={<Home />} />
+          <Route path="/shorts" element={<Shorts />} />
           <Route path="/ai-companion" element={<AICompanionPage />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/settings" element={<Settings />} />
