@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import { Layout } from "@/components/layout/Layout";
 import EnhancedRecommendations from "@/components/home/EnhancedRecommendations";
+import WhatsNextFeature from "@/components/home/WhatsNextFeature";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +104,10 @@ const Home = () => {
             ></div>
           </div>
         )}
+        
+        {/* Add the "What's Next" feature */}
+        <WhatsNextFeature />
+        
         <EnhancedRecommendations />
       </main>
     </Layout>
