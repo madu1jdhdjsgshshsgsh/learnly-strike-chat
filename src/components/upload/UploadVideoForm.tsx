@@ -1,11 +1,10 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Image, Loader2 } from "lucide-react";
+import { Upload, X, Image, Loader2, Video } from "lucide-react";
 
 export const UploadVideoForm = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -26,7 +25,6 @@ export const UploadVideoForm = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check if file is a video
     if (!file.type.startsWith("video/")) {
       toast({
         title: "Invalid file type",
@@ -43,7 +41,6 @@ export const UploadVideoForm = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Check if file is an image
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
@@ -55,7 +52,6 @@ export const UploadVideoForm = () => {
     
     setThumbnailFile(file);
     
-    // Create a preview
     const reader = new FileReader();
     reader.onload = () => {
       setThumbnailPreview(reader.result as string);
@@ -90,7 +86,6 @@ export const UploadVideoForm = () => {
   };
   
   const handleUpload = () => {
-    // Validate required fields
     if (!videoFile) {
       toast({
         title: "Video required",
@@ -109,18 +104,15 @@ export const UploadVideoForm = () => {
       return;
     }
     
-    // Start upload simulation
     setIsUploading(true);
     setUploadProgress(0);
     
-    // Simulate upload progress
     const interval = setInterval(() => {
       setUploadProgress(prev => {
         const newProgress = prev + 10;
         if (newProgress >= 100) {
           clearInterval(interval);
           
-          // Complete the upload
           setTimeout(() => {
             setIsUploading(false);
             toast({
@@ -128,7 +120,6 @@ export const UploadVideoForm = () => {
               description: "Your educational video has been uploaded successfully and is pending review.",
             });
             
-            // Reset form
             setVideoFile(null);
             setThumbnailFile(null);
             setThumbnailPreview(null);
