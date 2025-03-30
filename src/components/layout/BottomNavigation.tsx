@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, Video, Upload, User, Play } from "lucide-react";
+import { Home, Video, Upload, User, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { UploadVideoForm } from "@/components/upload/UploadVideoForm";
@@ -32,7 +32,7 @@ export const BottomNavigation = () => {
           size="icon" 
           className={`w-full h-full rounded-none flex flex-col items-center justify-center gap-1 ${isActive('/shorts') ? 'text-primary' : 'text-muted-foreground'}`}
         >
-          <Play className="h-5 w-5" />
+          <Video className="h-5 w-5" />
           <span className="text-xs">Shorts</span>
         </Button>
       </Link>
@@ -58,6 +58,17 @@ export const BottomNavigation = () => {
         </DialogContent>
       </Dialog>
       
+      <Link to="/chat" className="flex-1">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={`w-full h-full rounded-none flex flex-col items-center justify-center gap-1 ${isActive('/chat') ? 'text-primary' : 'text-muted-foreground'}`}
+        >
+          <MessageSquare className="h-5 w-5" />
+          <span className="text-xs">Chat</span>
+        </Button>
+      </Link>
+      
       <Link to="/profile" className="flex-1">
         <Button 
           variant="ghost" 
@@ -66,17 +77,6 @@ export const BottomNavigation = () => {
         >
           <User className="h-5 w-5" />
           <span className="text-xs">Profile</span>
-        </Button>
-      </Link>
-      
-      <Link to="/settings" className="flex-1">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className={`w-full h-full rounded-none flex flex-col items-center justify-center gap-1 ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}
-        >
-          <Video className="h-5 w-5" />
-          <span className="text-xs">Videos</span>
         </Button>
       </Link>
     </div>

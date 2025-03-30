@@ -8,9 +8,6 @@ import {
   Bell, 
   Menu, 
   Search, 
-  Video, 
-  BookOpen, 
-  MessageSquare,
   LogOut,
   User,
   Settings,
@@ -25,11 +22,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const { signOut, user } = useAuth();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +36,16 @@ const Navbar = () => {
     }
   };
 
-  const handleLogout = () => {
-    // In a real app, this would handle logout functionality
-    navigate("/login");
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+    }
   };
+
+  const userInitials = user?.user_metadata?.full_name 
+    ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase() 
+    : "U";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">
@@ -63,41 +67,32 @@ const Navbar = () => {
                     to="/home"
                     className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted"
                   >
-                    <Video className="h-5 w-5" />
-                    <span>Videos</span>
+                    <User className="h-5 w-5" />
+                    <span>Profile</span>
                   </Link>
                   <Link
                     to="/ai-companion"
                     className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted"
                   >
-                    <BookOpen className="h-5 w-5" />
-                    <span>AI Companion</span>
+                    <Settings className="h-5 w-5" />
+                    <span>Settings</span>
                   </Link>
+                  <Button 
+                    variant="ghost" 
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted justify-start"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span>Logout</span>
+                  </Button>
                 </nav>
               </div>
             </SheetContent>
           </Sheet>
 
           <Link to="/home" className="flex items-center gap-2">
-            <span className="text-xl font-bold text-strike-500 hidden sm:inline-block">Strike</span>
+            <span className="text-xl font-bold text-strike-500">Strike</span>
           </Link>
-
-          <nav className="hidden md:flex items-center gap-4">
-            <Link
-              to="/home"
-              className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted"
-            >
-              <Video className="h-5 w-5" />
-              <span>Videos</span>
-            </Link>
-            <Link
-              to="/ai-companion"
-              className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-muted"
-            >
-              <BookOpen className="h-5 w-5" />
-              <span>AI Companion</span>
-            </Link>
-          </nav>
         </div>
 
         <form onSubmit={handleSearch} className="flex-1 max-w-md">
@@ -124,17 +119,13 @@ const Navbar = () => {
         <div className="flex items-center gap-2">
           <Link to="/chat">
             <Button variant="ghost" size="icon" className="relative">
-              <MessageSquare className="h-5 w-5" />
+              <Bell className="h-5 w-5" />
               <span className="absolute top-0 right-0 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-strike-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-strike-500"></span>
               </span>
             </Button>
           </Link>
-          
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
-          </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -142,7 +133,7 @@ const Navbar = () => {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="" />
                   <AvatarFallback className="bg-strike-100 text-strike-800">
-                    US
+                    {userInitials}
                   </AvatarFallback>
                 </Avatar>
               </Button>

@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   session: Session | null;
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Initializing auth context...');
@@ -42,9 +44,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Handle different auth events
         if (event === 'SIGNED_IN') {
           console.log('User signed in:', currentSession?.user?.email);
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
+          toast({
+            title: "Signed out",
+            description: "You have been signed out successfully.",
+          });
           navigate('/login');
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed');
         }
       }
     );
@@ -60,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting to sign in with email:', email);
