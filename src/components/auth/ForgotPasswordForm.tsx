@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
@@ -17,15 +18,30 @@ const ForgotPasswordForm = () => {
     e.preventDefault();
     setLoading(true);
     
-    // In a real app, this would be an actual API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
       setSubmitted(true);
       toast({
         title: "Email sent",
         description: "Check your inbox for password reset instructions.",
       });
-    }, 1500);
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast({
+        title: "Failed to send reset email",
+        description: "Please try again or contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {

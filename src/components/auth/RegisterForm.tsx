@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const RegisterForm = () => {
   const [fullName, setFullName] = useState("");
@@ -16,6 +17,7 @@ const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,24 +33,42 @@ const RegisterForm = () => {
     
     setLoading(true);
     
-    // In a real app, this would be an actual registration call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { data, error } = await signUp(email, password, fullName);
       
-      // Store authentication status in localStorage
-      localStorage.setItem("userAuth", JSON.stringify({
-        email,
-        fullName,
-        isAuthenticated: true,
-        timestamp: new Date().toISOString()
-      }));
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
       
+      if (data.session) {
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created!",
+        });
+        navigate("/onboarding");
+      } else {
+        // If email confirmation is enabled, there might not be a session
+        toast({
+          title: "Registration successful",
+          description: "Please check your email for confirmation.",
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
       toast({
-        title: "Registration successful",
-        description: "Your account has been created!",
+        title: "An unexpected error occurred",
+        description: "Please try again later",
+        variant: "destructive",
       });
-      navigate("/onboarding");
-    }, 1500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

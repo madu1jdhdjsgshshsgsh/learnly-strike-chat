@@ -1,44 +1,18 @@
 
 import { Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, loading } = useAuth();
   
-  // Check for persistent authentication on component mount
-  useEffect(() => {
-    try {
-      // Check if user has been authenticated before using localStorage
-      const userAuth = localStorage.getItem("userAuth");
-      // Also check session storage as a fallback
-      const sessionAuth = sessionStorage.getItem("userAuth");
-      
-      // Consider authenticated if found in either storage
-      setIsAuthenticated(!!(userAuth || sessionAuth));
-      
-      // If not found in localStorage but found in sessionStorage,
-      // persist to localStorage for future visits
-      if (!userAuth && sessionAuth) {
-        localStorage.setItem("userAuth", sessionAuth);
-      }
-      
-      console.log("Authentication check:", {
-        hasUserAuth: !!userAuth,
-        hasSessionAuth: !!sessionAuth,
-        isAuthenticated: !!(userAuth || sessionAuth)
-      });
-    } catch (error) {
-      console.error("Error checking authentication:", error);
-      setIsAuthenticated(false);
-    }
-  }, []);
-
   // Show loading state while checking authentication
-  if (isAuthenticated === null) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+    </div>;
   }
 
-  if (isAuthenticated) {
+  if (user) {
     return <Navigate to="/home" replace />;
   }
 

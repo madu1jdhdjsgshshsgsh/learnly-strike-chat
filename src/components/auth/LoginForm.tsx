@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -13,36 +14,47 @@ const LoginForm = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { signIn } = useAuth();
+
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/home";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // In a real app, this would be an actual authentication call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { data, error } = await signIn(email, password);
       
-      // Store authentication status in localStorage
-      localStorage.setItem("userAuth", JSON.stringify({
-        email,
-        isAuthenticated: true,
-        timestamp: new Date().toISOString()
-      }));
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Strike!",
-      });
-      
-      // Check if user has completed onboarding
-      const hasCompletedOnboarding = false; // This would be from your auth system
-      if (hasCompletedOnboarding) {
-        navigate("/home");
-      } else {
-        navigate("/onboarding");
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
       }
-    }, 1500);
+      
+      if (data) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Strike!",
+        });
+        
+        // Navigate to where the user was trying to go, or home page
+        navigate(from, { replace: true });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "An unexpected error occurred",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
