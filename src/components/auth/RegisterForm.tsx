@@ -7,20 +7,36 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const RegisterForm = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [userType, setUserType] = useState<"learner" | "creator">("learner");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signUp } = useAuth();
 
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate email format
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid email format",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (password !== confirmPassword) {
       toast({
@@ -35,7 +51,7 @@ const RegisterForm = () => {
     
     try {
       console.log("Starting registration process");
-      const { data, error } = await signUp(email, password, fullName);
+      const { data, error } = await signUp(email, password, fullName, userType);
       
       if (error) {
         console.error("Registration error:", error);
@@ -54,7 +70,7 @@ const RegisterForm = () => {
           title: "Registration successful",
           description: "Your account has been created!",
         });
-        navigate("/onboarding");
+        navigate("/home");
       } else {
         // If email confirmation is enabled, there might not be a session
         toast({
@@ -149,6 +165,25 @@ const RegisterForm = () => {
               />
             </div>
           </div>
+          
+          <div className="space-y-3">
+            <Label>I want to join Strike as:</Label>
+            <RadioGroup 
+              value={userType} 
+              onValueChange={(value) => setUserType(value as "learner" | "creator")}
+              className="flex flex-col space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="learner" id="learner" />
+                <Label htmlFor="learner">Learner - I want to learn new skills and knowledge</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="creator" id="creator" />
+                <Label htmlFor="creator">Creator - I want to create and share educational content</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          
           <Button type="submit" className="w-full bg-strike-500 hover:bg-strike-600" disabled={loading}>
             {loading ? "Creating account..." : "Create account"}
           </Button>

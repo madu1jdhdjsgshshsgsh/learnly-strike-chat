@@ -13,7 +13,7 @@ type AuthContextType = {
     error: Error | null;
     data: Session | null;
   }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{
+  signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null };
   }>;
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, userType = "learner") => {
     console.log('Attempting to sign up:', email);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -104,6 +104,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         options: {
           data: {
             full_name: fullName,
+            user_type: userType
           },
         }
       });

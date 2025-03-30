@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Phone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState<"email" | "phone">("email");
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -20,34 +23,78 @@ const LoginForm = () => {
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/home";
 
+  // Email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Phone validation regex for international format
+  const phoneRegex = /^\+?[0-9]{10,15}$/;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      console.log("Attempting to sign in with:", email);
-      const { data, error } = await signIn(email, password);
-      
-      if (error) {
-        console.error("Login error:", error);
+      if (activeTab === "email") {
+        // Validate email format
+        if (!emailRegex.test(email)) {
+          toast({
+            title: "Invalid email format",
+            description: "Please enter a valid email address",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        console.log("Attempting to sign in with email:", email);
+        const { data, error } = await signIn(email, password);
+        
+        if (error) {
+          console.error("Login error:", error);
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        console.log("Sign in response:", data);
+        
+        if (data) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back to Strike!",
+          });
+          
+          // Navigate to where the user was trying to go, or home page
+          navigate(from, { replace: true });
+        }
+      } else {
+        // Validate phone format
+        if (!phoneRegex.test(phone)) {
+          toast({
+            title: "Invalid phone number",
+            description: "Please enter a valid phone number (10-15 digits)",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // For now, we'll simulate phone login with a message
+        // In a real implementation, you'd integrate phone authentication
         toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      console.log("Sign in response:", data);
-      
-      if (data) {
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Strike!",
+          title: "Phone login",
+          description: "Phone authentication will be implemented with OTP verification",
         });
         
-        // Navigate to where the user was trying to go, or home page
-        navigate(from, { replace: true });
+        // Mock successful login after delay
+        setTimeout(() => {
+          setLoading(false);
+          // For demo purposes only - in real implementation, wait for auth confirmation
+          navigate(from, { replace: true });
+        }, 1500);
       }
     } catch (error: any) {
       console.error("Unexpected login error:", error);
@@ -56,7 +103,6 @@ const LoginForm = () => {
         description: error.message || "Please try again later",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -70,58 +116,122 @@ const LoginForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <div className="relative">
-              <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder="Email"
-                className="pl-8"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative">
-              <Lock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                className="pl-8 pr-8"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "email" | "phone")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="phone">Phone</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="email">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Mail className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    className="pl-8"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    className="pl-8 pr-8"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-strike-600 hover:text-strike-800"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+              <Button type="submit" className="w-full bg-strike-500 hover:bg-strike-600" disabled={loading}>
+                {loading ? "Logging in..." : "Log in"}
               </Button>
-            </div>
-            <div className="text-right">
-              <Link
-                to="/forgot-password"
-                className="text-sm font-medium text-strike-600 hover:text-strike-800"
-              >
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-          <Button type="submit" className="w-full bg-strike-500 hover:bg-strike-600" disabled={loading}>
-            {loading ? "Logging in..." : "Log in"}
-          </Button>
-        </form>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="phone">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <div className="relative">
+                  <Phone className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="tel"
+                    placeholder="Phone Number (with country code)"
+                    className="pl-8"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    className="pl-8 pr-8"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <div className="text-right">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-strike-600 hover:text-strike-800"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+              <Button type="submit" className="w-full bg-strike-500 hover:bg-strike-600" disabled={loading}>
+                {loading ? "Logging in..." : "Log in"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
       </CardContent>
       <CardFooter className="flex justify-center flex-col space-y-2">
         <div className="text-sm text-center">

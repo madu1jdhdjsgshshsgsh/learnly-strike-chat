@@ -1,9 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Home, Video, Upload, User, MessageSquare } from "lucide-react";
+import { Home, Video, User, Bot, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UploadVideoForm } from "@/components/upload/UploadVideoForm";
 
 export const BottomNavigation = () => {
   const location = useLocation();
@@ -37,26 +35,16 @@ export const BottomNavigation = () => {
         </Button>
       </Link>
       
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="flex-1 w-full h-full rounded-none flex flex-col items-center justify-center gap-1 text-muted-foreground"
-          >
-            <div className="bg-primary text-white p-2 rounded-full">
-              <Upload className="h-5 w-5" />
-            </div>
-            <span className="text-xs">Upload</span>
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Video</DialogTitle>
-          </DialogHeader>
-          <UploadVideoForm />
-        </DialogContent>
-      </Dialog>
+      <Link to="/ai-companion" className="flex-1">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className={`w-full h-full rounded-none flex flex-col items-center justify-center gap-1 ${isActive('/ai-companion') ? 'text-primary' : 'text-muted-foreground'}`}
+        >
+          <Bot className="h-5 w-5" />
+          <span className="text-xs">AI Tutor</span>
+        </Button>
+      </Link>
       
       <Link to="/chat" className="flex-1">
         <Button 
