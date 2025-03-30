@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,9 +33,11 @@ const RegisterForm = () => {
     setLoading(true);
     
     try {
+      console.log("Starting registration process");
       const { data, error } = await signUp(email, password, fullName);
       
       if (error) {
+        console.error("Registration error:", error);
         toast({
           title: "Registration failed",
           description: error.message,
@@ -44,6 +45,8 @@ const RegisterForm = () => {
         });
         return;
       }
+      
+      console.log("Registration response:", data);
       
       if (data.session) {
         toast({
@@ -59,11 +62,11 @@ const RegisterForm = () => {
         });
         navigate("/login");
       }
-    } catch (error) {
-      console.error("Registration error:", error);
+    } catch (error: any) {
+      console.error("Unexpected registration error:", error);
       toast({
         title: "An unexpected error occurred",
-        description: "Please try again later",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     } finally {

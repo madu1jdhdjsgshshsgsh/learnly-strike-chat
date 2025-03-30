@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,9 +24,11 @@ const LoginForm = () => {
     setLoading(true);
     
     try {
+      console.log("Attempting to sign in with:", email);
       const { data, error } = await signIn(email, password);
       
       if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Login failed",
           description: error.message,
@@ -35,6 +36,8 @@ const LoginForm = () => {
         });
         return;
       }
+      
+      console.log("Sign in response:", data);
       
       if (data) {
         toast({
@@ -45,11 +48,11 @@ const LoginForm = () => {
         // Navigate to where the user was trying to go, or home page
         navigate(from, { replace: true });
       }
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (error: any) {
+      console.error("Unexpected login error:", error);
       toast({
         title: "An unexpected error occurred",
-        description: "Please try again later",
+        description: error.message || "Please try again later",
         variant: "destructive",
       });
     } finally {

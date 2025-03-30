@@ -28,10 +28,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Initializing auth context...');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         console.log('Auth state changed:', event);
+        console.log('Current session:', currentSession);
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -47,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('Current session:', currentSession);
+      console.log('Initial session check:', currentSession);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
@@ -59,13 +63,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
+    console.log('Attempting to sign in with email:', email);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
+      
+      console.log('Sign in successful:', data);
       return { data: data.session, error: null };
     } catch (error) {
       console.error('Error signing in:', error);
@@ -74,6 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    console.log('Attempting to sign up:', email);
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -85,7 +96,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
+      
+      console.log('Sign up successful:', data);
       return { data, error: null };
     } catch (error) {
       console.error('Error signing up:', error);
@@ -97,9 +113,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    console.log('Attempting to sign out');
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+      console.log('Sign out successful');
       return { error: null };
     } catch (error) {
       console.error('Error signing out:', error);
