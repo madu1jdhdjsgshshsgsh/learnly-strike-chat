@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -183,7 +182,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         options: {
           data: {
             full_name: fullName,
-            user_roles: userRoles
+            user_roles: userRoles,
+            // Flag to indicate this user needs onboarding
+            needs_onboarding: true
           },
           emailRedirectTo: `${appURL}/login`,
         }
@@ -195,6 +196,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       console.log('Sign up successful:', data);
+      
+      // If sign up is successful and we have a session, redirect to onboarding
+      if (data && data.session) {
+        toast({
+          title: "Registration successful!",
+          description: "You'll be directed to set up your learning preferences.",
+        });
+      }
+      
       return { data, error: null };
     } catch (error) {
       console.error('Error signing up:', error);

@@ -106,11 +106,21 @@ const LoginForm = () => {
           
           if (error) {
             console.error("Send OTP error:", error);
-            toast({
-              title: "Failed to send OTP",
-              description: error.message || "Please try again later",
-              variant: "destructive",
-            });
+            
+            // Improved error messaging for phone authentication
+            if (error.message.includes("provider")) {
+              toast({
+                title: "Phone authentication not enabled",
+                description: "Phone authentication is not configured in Supabase. Please contact the administrator or use email login instead.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Failed to send OTP",
+                description: error.message || "Please try again later",
+                variant: "destructive",
+              });
+            }
             setLoading(false);
             return;
           }
@@ -257,7 +267,7 @@ const LoginForm = () => {
                   <Alert className="mt-4 bg-blue-50">
                     <Info className="h-4 w-4" />
                     <AlertDescription className="text-xs">
-                      Note: Phone authentication requires configuration in Supabase. If you're getting errors, please contact the administrator.
+                      Note: Phone authentication requires configuration in Supabase. If you're getting errors, please use email login instead.
                     </AlertDescription>
                   </Alert>
                 </div>

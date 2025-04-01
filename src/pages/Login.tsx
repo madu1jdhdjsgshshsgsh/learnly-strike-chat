@@ -3,15 +3,42 @@ import LoginForm from "@/components/auth/LoginForm";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // If user is already logged in, redirect to home
+  // Check if the user needs onboarding after login
   useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (user) {
+        try {
+          // Check if the user has completed onboarding by looking for preferences
+          const { data: profiles, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) throw error;
+          
+          // If user has no preferences set, redirect to onboarding
+          if (!profiles?.grade && !profiles?.topics) {
+            navigate('/onboarding');
+          } else {
+            navigate('/home');
+          }
+        } catch (error) {
+          console.error('Error checking onboarding status:', error);
+          // If there's an error, still redirect to home
+          navigate('/home');
+        }
+      }
+    };
+    
     if (user) {
-      navigate('/home');
+      checkOnboardingStatus();
     }
   }, [user, navigate]);
   
