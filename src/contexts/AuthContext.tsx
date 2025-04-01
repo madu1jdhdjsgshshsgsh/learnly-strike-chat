@@ -57,6 +57,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           navigate('/login');
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed');
+        } else if (event === 'USER_UPDATED') {
+          console.log('User updated');
+          toast({
+            title: "Profile updated",
+            description: "Your profile has been updated successfully.",
+          });
         }
       }
     );
@@ -98,6 +104,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, fullName: string, userType = "learner") => {
     console.log('Attempting to sign up:', email);
     try {
+      // First check if user already exists to provide better error message
+      const { data: existingUsers, error: lookupError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+        
+      if (lookupError && !lookupError.message.includes('column "email" does not exist')) {
+        console.error('Error checking existing user:', lookupError);
+        throw new Error(`Error checking existing user: ${lookupError.message}`);
+      }
+      
+      if (existingUsers) {
+        throw new Error('A user with this email already exists. Please try logging in instead.');
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,

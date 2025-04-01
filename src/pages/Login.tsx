@@ -1,7 +1,20 @@
 
 import LoginForm from "@/components/auth/LoginForm";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 const Login = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // If user is already logged in, redirect to home
+  useEffect(() => {
+    if (user) {
+      navigate('/home');
+    }
+  }, [user, navigate]);
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md mb-6">

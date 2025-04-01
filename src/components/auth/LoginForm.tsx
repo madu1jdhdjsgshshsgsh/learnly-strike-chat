@@ -50,11 +50,23 @@ const LoginForm = () => {
         
         if (error) {
           console.error("Login error:", error);
-          toast({
-            title: "Login failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          
+          // Check if the error is due to user not existing
+          if (error.message.includes("Email not confirmed") || 
+              error.message.includes("Invalid login credentials")) {
+            toast({
+              title: "Login failed",
+              description: "Invalid email or password. Please try again or register if you don't have an account.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Login failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
+          
           setLoading(false);
           return;
         }
@@ -82,19 +94,14 @@ const LoginForm = () => {
           return;
         }
         
-        // For now, we'll simulate phone login with a message
-        // In a real implementation, you'd integrate phone authentication
+        // For now, phone login is just a placeholder
+        // Show an error message indicating this functionality isn't fully implemented
         toast({
-          title: "Phone login",
-          description: "Phone authentication will be implemented with OTP verification",
+          title: "Phone login not available",
+          description: "Phone authentication is not fully implemented yet. Please use email login.",
+          variant: "destructive",
         });
-        
-        // Mock successful login after delay
-        setTimeout(() => {
-          setLoading(false);
-          // For demo purposes only - in real implementation, wait for auth confirmation
-          navigate(from, { replace: true });
-        }, 1500);
+        setLoading(false);
       }
     } catch (error: any) {
       console.error("Unexpected login error:", error);
