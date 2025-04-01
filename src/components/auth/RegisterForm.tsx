@@ -60,6 +60,7 @@ const RegisterForm = () => {
           description: error.message,
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
       

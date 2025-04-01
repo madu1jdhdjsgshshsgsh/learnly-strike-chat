@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Shorts from "./pages/Shorts";
+import Support from "./pages/Support";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,11 @@ const App = () => (
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/support" element={
+              <ProtectedRoute>
+                <Support />
               </ProtectedRoute>
             } />
             

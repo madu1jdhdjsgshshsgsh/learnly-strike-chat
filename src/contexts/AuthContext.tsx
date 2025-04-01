@@ -104,21 +104,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, fullName: string, userType = "learner") => {
     console.log('Attempting to sign up:', email);
     try {
-      // First check if user already exists to provide better error message
-      const { data: existingUsers, error: lookupError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .maybeSingle();
-        
-      if (lookupError && !lookupError.message.includes('column "email" does not exist')) {
-        console.error('Error checking existing user:', lookupError);
-        throw new Error(`Error checking existing user: ${lookupError.message}`);
-      }
-      
-      if (existingUsers) {
-        throw new Error('A user with this email already exists. Please try logging in instead.');
-      }
+      // Don't check for existing user by email in profiles table
+      // This was causing the infinite type instantiation error
+      // The signup function from Supabase will handle existing users
 
       const { data, error } = await supabase.auth.signUp({
         email,
