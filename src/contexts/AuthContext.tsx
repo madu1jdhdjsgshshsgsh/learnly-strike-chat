@@ -13,9 +13,21 @@ type AuthContextType = {
     error: Error | null;
     data: Session | null;
   }>;
+  signInWithOTP: (phone: string) => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
+  verifyOTP: (phone: string, token: string) => Promise<{
+    error: Error | null;
+    data: any;
+  }>;
   signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null };
+  }>;
+  resetPassword: (email: string) => Promise<{
+    error: Error | null;
+    data: any;
   }>;
   signOut: () => Promise<{ error: Error | null }>;
 };
@@ -63,6 +75,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             title: "Profile updated",
             description: "Your profile has been updated successfully.",
           });
+        } else if (event === 'PASSWORD_RECOVERY') {
+          console.log('Password recovery initiated');
+          toast({
+            title: "Password Recovery",
+            description: "Check your email for password recovery instructions.",
+          });
         }
       }
     );
@@ -101,6 +119,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const signInWithOTP = async (phone: string) => {
+    console.log('Attempting to send OTP to phone:', phone);
+    try {
+      const { data, error } = await supabase.auth.signInWithOtp({
+        phone,
+      });
+      
+      if (error) {
+        console.error('Send OTP error:', error);
+        throw error;
+      }
+      
+      console.log('OTP sent successfully:', data);
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      return { data: null, error: error as Error };
+    }
+  };
+
+  const verifyOTP = async (phone: string, token: string) => {
+    console.log('Attempting to verify OTP for phone:', phone);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone,
+        token,
+        type: 'sms',
+      });
+      
+      if (error) {
+        console.error('OTP verification error:', error);
+        throw error;
+      }
+      
+      console.log('OTP verification successful:', data);
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      return { data: null, error: error as Error };
+    }
+  };
+
   const signUp = async (email: string, password: string, fullName: string, userType = "learner") => {
     console.log('Attempting to sign up:', email);
     try {
@@ -116,6 +176,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             full_name: fullName,
             user_type: userType
           },
+          emailRedirectTo: window.location.origin + '/login',
         }
       });
       
@@ -132,6 +193,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: { user: null, session: null }, 
         error: error as Error 
       };
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    console.log('Attempting to reset password for:', email);
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      
+      if (error) {
+        console.error('Reset password error:', error);
+        throw error;
+      }
+      
+      console.log('Reset password email sent successfully:', data);
+      return { data, error: null };
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      return { data: null, error: error as Error };
     }
   };
 
@@ -156,7 +237,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user,
     loading,
     signIn,
+    signInWithOTP,
+    verifyOTP,
     signUp,
+    resetPassword,
     signOut,
   };
 
