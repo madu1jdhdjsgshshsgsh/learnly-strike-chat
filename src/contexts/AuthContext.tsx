@@ -21,7 +21,7 @@ type AuthContextType = {
     error: Error | null;
     data: any;
   }>;
-  signUp: (email: string, password: string, fullName: string, userType?: string) => Promise<{
+  signUp: (email: string, password: string, fullName: string, userRoles?: string) => Promise<{
     error: Error | null;
     data: { user: User | null; session: Session | null };
   }>;
@@ -122,12 +122,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithOTP = async (phone: string) => {
     console.log('Attempting to send OTP to phone:', phone);
     try {
+      // Make sure phone number is in international format
+      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
       const { data, error } = await supabase.auth.signInWithOtp({
-        phone,
+        phone: formattedPhone,
       });
       
       if (error) {
         console.error('Send OTP error:', error);
+        // If the error is about provider not being enabled, show a helpful message
+        if (error.message.includes("provider")) {
+          throw new Error("Phone authentication is not enabled. Please contact support.");
+        }
         throw error;
       }
       
@@ -142,8 +149,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyOTP = async (phone: string, token: string) => {
     console.log('Attempting to verify OTP for phone:', phone);
     try {
+      // Make sure phone number is in international format
+      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
       const { data, error } = await supabase.auth.verifyOtp({
-        phone,
+        phone: formattedPhone,
         token,
         type: 'sms',
       });
@@ -161,22 +171,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, userType = "learner") => {
+  const signUp = async (email: string, password: string, fullName: string, userRoles = "learner") => {
     console.log('Attempting to sign up:', email);
     try {
-      // Don't check for existing user by email in profiles table
-      // This was causing the infinite type instantiation error
-      // The signup function from Supabase will handle existing users
-
+      // Get the current app URL to use for redirects (instead of hardcoded localhost)
+      const appURL = window.location.origin;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            user_type: userType
+            user_roles: userRoles
           },
-          emailRedirectTo: window.location.origin + '/login',
+          emailRedirectTo: `${appURL}/login`,
         }
       });
       
@@ -199,8 +208,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const resetPassword = async (email: string) => {
     console.log('Attempting to reset password for:', email);
     try {
+      // Get the current app URL to use for redirects (instead of hardcoded localhost)
+      const appURL = window.location.origin;
+      
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
+        redirectTo: `${appURL}/reset-password`,
       });
       
       if (error) {

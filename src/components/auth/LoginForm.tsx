@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Lock, Mail, Phone } from "lucide-react";
+import { Eye, EyeOff, Info, Lock, Mail, Phone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -54,7 +55,7 @@ const LoginForm = () => {
         if (error) {
           console.error("Login error:", error);
           
-          // Check if the error is due to user not existing
+          // Check if the error is due to user not existing or email not confirmed
           if (error.message.includes("Email not confirmed") || 
               error.message.includes("Invalid login credentials")) {
             toast({
@@ -164,6 +165,13 @@ const LoginForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-4 bg-amber-50">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            If you've registered but can't log in, please check your email for a confirmation link or contact support.
+          </AlertDescription>
+        </Alert>
+        
         <Tabs value={activeTab} onValueChange={(value) => {
           setActiveTab(value as "email" | "phone");
           setOtpSent(false); // Reset OTP sent state when changing tabs
@@ -246,6 +254,12 @@ const LoginForm = () => {
                   <p className="text-xs text-muted-foreground">
                     Enter your phone number with country code (e.g., +1 for US, +91 for India)
                   </p>
+                  <Alert className="mt-4 bg-blue-50">
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      Note: Phone authentication requires configuration in Supabase. If you're getting errors, please contact the administrator.
+                    </AlertDescription>
+                  </Alert>
                 </div>
               ) : (
                 <div className="space-y-4">

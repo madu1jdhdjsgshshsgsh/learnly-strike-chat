@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
 const RegisterForm = () => {
@@ -15,7 +15,8 @@ const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [userType, setUserType] = useState<"learner" | "creator">("learner");
+  const [isLearner, setIsLearner] = useState(true);
+  const [isCreator, setIsCreator] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -46,12 +47,26 @@ const RegisterForm = () => {
       });
       return;
     }
+
+    if (!isLearner && !isCreator) {
+      toast({
+        title: "Role selection required",
+        description: "Please select at least one role (Learner or Creator)",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     
     try {
       console.log("Starting registration process");
-      const { data, error } = await signUp(email, password, fullName, userType);
+      // Create an array of roles the user has selected
+      const userRoles = [];
+      if (isLearner) userRoles.push("learner");
+      if (isCreator) userRoles.push("creator");
+
+      const { data, error } = await signUp(email, password, fullName, userRoles.join(","));
       
       if (error) {
         console.error("Registration error:", error);
@@ -76,7 +91,7 @@ const RegisterForm = () => {
         // If email confirmation is enabled, there might not be a session
         toast({
           title: "Registration successful",
-          description: "Please check your email for confirmation.",
+          description: "Please check your email for confirmation. If you don't see it, check your spam folder.",
         });
         navigate("/login");
       }
@@ -169,20 +184,28 @@ const RegisterForm = () => {
           
           <div className="space-y-3">
             <Label>I want to join Strike as:</Label>
-            <RadioGroup 
-              value={userType} 
-              onValueChange={(value) => setUserType(value as "learner" | "creator")}
-              className="flex flex-col space-y-2"
-            >
+            <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="learner" id="learner" />
-                <Label htmlFor="learner">Learner - I want to learn new skills and knowledge</Label>
+                <Checkbox 
+                  id="learner" 
+                  checked={isLearner} 
+                  onCheckedChange={() => setIsLearner(!isLearner)} 
+                />
+                <Label htmlFor="learner" className="cursor-pointer">
+                  Learner - I want to learn new skills and knowledge
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="creator" id="creator" />
-                <Label htmlFor="creator">Creator - I want to create and share educational content</Label>
+                <Checkbox 
+                  id="creator" 
+                  checked={isCreator} 
+                  onCheckedChange={() => setIsCreator(!isCreator)} 
+                />
+                <Label htmlFor="creator" className="cursor-pointer">
+                  Creator - I want to create and share educational content
+                </Label>
               </div>
-            </RadioGroup>
+            </div>
           </div>
           
           <Button type="submit" className="w-full bg-strike-500 hover:bg-strike-600" disabled={loading}>

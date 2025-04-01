@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Mail, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
@@ -84,6 +86,12 @@ const ForgotPasswordForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-4 bg-blue-50">
+          <Info className="h-4 w-4" />
+          <AlertDescription className="text-xs">
+            Make sure to check your email settings in Supabase if you don't receive reset emails.
+          </AlertDescription>
+        </Alert>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <div className="relative">
