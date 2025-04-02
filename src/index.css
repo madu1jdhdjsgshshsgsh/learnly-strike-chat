@@ -88,3 +88,34 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Enhanced thumbnail animations */
+@layer utilities {
+  .thumbnail-hover {
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  .thumbnail-zoom {
+    @apply scale-105 brightness-90;
+  }
+  
+  .thumbnail-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100;
+  }
+  
+  .thumbnail-content {
+    @apply absolute bottom-0 left-0 right-0 p-3 opacity-0 transform translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0;
+  }
+  
+  .thumbnail-play-button {
+    @apply absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100;
+  }
+  
+  .thumbnail-container {
+    @apply relative aspect-video rounded-md overflow-hidden group cursor-pointer;
+  }
+  
+  .thumbnail-image {
+    @apply w-full h-full object-cover transition-all duration-300;
+  }
+}

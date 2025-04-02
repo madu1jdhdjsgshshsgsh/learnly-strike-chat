@@ -12,9 +12,18 @@ interface WhatsNextFeatureProps {
   onVideoClick?: (video: Video) => void;
 }
 
+// Default thumbnails from the provided examples
+const DEFAULT_THUMBNAILS = [
+  "public/lovable-uploads/25896976-4caa-4dc8-a964-fd6f1ebe235e.png",
+  "public/lovable-uploads/4dbd8351-9edf-4d34-be88-1622c97696ca.png",
+  "public/lovable-uploads/652fa740-6010-4c33-8f9c-ba3316fe937f.png",
+  "public/lovable-uploads/c71035c9-bd56-400e-a53a-173b4b33e265.png"
+];
+
 const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
   const { nextVideo, loading } = useWhatsNextRecommendation();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   if (loading) {
     return (
@@ -40,6 +49,7 @@ const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
     return null;
   }
   
+  const thumbnail = nextVideo.thumbnail || DEFAULT_THUMBNAILS[0];
   const formattedDate = formatDistanceToNow(new Date(nextVideo.uploadDate), { addSuffix: true });
   const viewCount = nextVideo.views >= 1000000
     ? `${(nextVideo.views / 1000000).toFixed(1)}M views`
@@ -65,26 +75,44 @@ const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
               {isPlaying && nextVideo.videoUrl ? (
                 <VideoPlayer 
                   src={nextVideo.videoUrl}
-                  thumbnail={nextVideo.thumbnail}
+                  thumbnail={thumbnail}
                   title={nextVideo.title}
                   autoPlay={true}
                   className="w-full aspect-video"
                 />
               ) : (
                 <div 
-                  className="relative w-full aspect-video cursor-pointer"
+                  className="relative w-full aspect-video cursor-pointer group"
                   onClick={handlePlayClick}
                 >
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-200 animate-pulse">
+                      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  
                   <img 
-                    src={nextVideo.thumbnail || '/placeholder.svg'} 
+                    src={thumbnail} 
                     alt={nextVideo.title}
-                    className="w-full h-full object-cover" 
+                    className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${!imageLoaded ? 'opacity-0' : ''}`}
+                    onLoad={() => setImageLoaded(true)}
                   />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                    <PlayCircle className="w-16 h-16 text-white" />
+                  
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="p-4 rounded-full bg-black/50 backdrop-blur-sm">
+                      <PlayCircle className="w-16 h-16 text-white" />
+                    </div>
                   </div>
+                  
                   <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
                     {Math.floor(nextVideo.duration / 60)}:{String(nextVideo.duration % 60).padStart(2, '0')}
+                  </div>
+                  
+                  {/* Title overlay at the bottom for small screens */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent md:hidden">
+                    <h3 className="text-white text-lg font-semibold drop-shadow-md">
+                      {nextVideo.title}
+                    </h3>
                   </div>
                 </div>
               )}
