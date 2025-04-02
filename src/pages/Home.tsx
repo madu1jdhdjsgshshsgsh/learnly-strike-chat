@@ -1,112 +1,137 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import EnhancedRecommendations from "@/components/home/EnhancedRecommendations";
 import WhatsNextFeature from "@/components/home/WhatsNextFeature";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import CategoryBar from "@/components/home/CategoryBar";
+import { useRecommendedVideos, Video } from "@/utils/recommendationEngine";
+import VideoCard from "@/components/home/VideoCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import VideoPlayer from "@/components/video/VideoPlayer";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeMainCategory, setActiveMainCategory] = useState("all");
+  const [activeSubCategory, setActiveSubCategory] = useState("All");
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+
+  const { videos, loading } = useRecommendedVideos(false);
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
+
+  const subCategories = ["All", "Science", "Math", "Coding", "Exam Prep", "Languages", "Arts", "Humanities", "History", "Technology", "Business"];
+
+  useEffect(() => {
+    if (activeSubCategory === "All") {
+      setFilteredVideos(videos);
+    } else {
+      const filtered = videos.filter(video => 
+        video.topics.some(topic => 
+          topic.toLowerCase().includes(activeSubCategory.toLowerCase())
+        )
+      );
+      setFilteredVideos(filtered.length > 0 ? filtered : videos);
+    }
+  }, [videos, activeSubCategory]);
+
+  const handleVideoClick = (video: Video) => {
+    setSelectedVideo(video);
+    setIsVideoModalOpen(true);
+  };
 
   return (
     <Layout>
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 mb-16">
         <div className="mb-6">
           <h1 className="text-2xl font-bold mb-4">Welcome to your learning dashboard</h1>
           
-          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs defaultValue="all" value={activeMainCategory} onValueChange={setActiveMainCategory} className="w-full">
             <div className="overflow-x-auto pb-2">
               <TabsList className="w-full md:w-auto mb-4">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="videos">Educational Videos</TabsTrigger>
-                <TabsTrigger value="shorts">Short Lessons</TabsTrigger>
-                <TabsTrigger value="exam">Exam Preparation</TabsTrigger>
-                <TabsTrigger value="stem">STEM</TabsTrigger>
-                <TabsTrigger value="languages">Languages</TabsTrigger>
-                <TabsTrigger value="arts">Arts & Humanities</TabsTrigger>
+                <TabsTrigger value="all">All Content</TabsTrigger>
+                <TabsTrigger value="recommended">Recommended</TabsTrigger>
+                <TabsTrigger value="trending">Trending</TabsTrigger>
+                <TabsTrigger value="saved">Saved</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
             </div>
             
-            <TabsContent value="all">
-              {/* Add the "What's Next" feature */}
-              <WhatsNextFeature />
-              <EnhancedRecommendations />
-            </TabsContent>
-            
-            <TabsContent value="videos">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Video content would be pulled from database */}
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">Understanding Advanced Mathematics</h3>
-                  <p className="text-sm text-muted-foreground">45-minute comprehensive lesson</p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">History of Ancient Civilizations</h3>
-                  <p className="text-sm text-muted-foreground">60-minute documentary</p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">Introduction to Quantum Physics</h3>
-                  <p className="text-sm text-muted-foreground">30-minute lecture</p>
-                </div>
+            <TabsContent value="all" className="space-y-6">
+              <div className="py-2">
+                <CategoryBar 
+                  categories={subCategories}
+                  activeCategory={activeSubCategory}
+                  onSelectCategory={setActiveSubCategory}
+                />
               </div>
-            </TabsContent>
-            
-            <TabsContent value="shorts">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* Short lessons content */}
-                <div className="border rounded-lg p-3">
-                  <h3 className="font-semibold text-sm">Quick Math: Derivatives</h3>
-                  <p className="text-xs text-muted-foreground">3 min</p>
-                </div>
-                <div className="border rounded-lg p-3">
-                  <h3 className="font-semibold text-sm">5 Grammar Tips</h3>
-                  <p className="text-xs text-muted-foreground">2 min</p>
-                </div>
-                <div className="border rounded-lg p-3">
-                  <h3 className="font-semibold text-sm">Chemistry: Valence Electrons</h3>
-                  <p className="text-xs text-muted-foreground">4 min</p>
-                </div>
-                <div className="border rounded-lg p-3">
-                  <h3 className="font-semibold text-sm">World Geography: Capitals</h3>
-                  <p className="text-xs text-muted-foreground">3 min</p>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="exam">
+              
+              <WhatsNextFeature onVideoClick={handleVideoClick} />
+              
               <div className="space-y-4">
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">SAT Preparation Course</h3>
-                  <p className="text-sm text-muted-foreground">Complete preparation with practice tests</p>
-                  <div className="mt-2">
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Popular</span>
+                <h2 className="text-xl font-semibold">Educational Videos</h2>
+                
+                {loading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="aspect-video bg-muted rounded-md mb-2"></div>
+                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">AP Calculus Review</h3>
-                  <p className="text-sm text-muted-foreground">Comprehensive review of all topics</p>
-                </div>
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-semibold">TOEFL Language Practice</h3>
-                  <p className="text-sm text-muted-foreground">Speaking and writing exercises</p>
-                </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filteredVideos.map((video) => (
+                      <VideoCard 
+                        key={video.id}
+                        id={video.id}
+                        title={video.title}
+                        channelName={video.teacher.name}
+                        channelAvatar={video.teacher.avatar}
+                        thumbnail={video.thumbnail}
+                        views={video.views}
+                        publishedAt={video.uploadDate}
+                        duration={`${Math.floor(video.duration / 60)}:${String(video.duration % 60).padStart(2, '0')}`}
+                        onClick={() => handleVideoClick(video)}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
             
-            {/* Other tab contents would be similar */}
-            <TabsContent value="stem">
-              <p className="text-muted-foreground">STEM content will appear here</p>
+            <TabsContent value="recommended">
+              <EnhancedRecommendations onVideoClick={handleVideoClick} />
             </TabsContent>
             
-            <TabsContent value="languages">
-              <p className="text-muted-foreground">Language learning content will appear here</p>
+            <TabsContent value="trending">
+              <div className="text-muted-foreground">Trending videos will appear here</div>
             </TabsContent>
             
-            <TabsContent value="arts">
-              <p className="text-muted-foreground">Arts & Humanities content will appear here</p>
+            <TabsContent value="saved">
+              <div className="text-muted-foreground">Your saved videos will appear here</div>
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <div className="text-muted-foreground">Your watch history will appear here</div>
             </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      <Dialog open={isVideoModalOpen} onOpenChange={setIsVideoModalOpen}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black">
+          {selectedVideo?.videoUrl && (
+            <VideoPlayer 
+              src={selectedVideo.videoUrl} 
+              thumbnail={selectedVideo.thumbnail}
+              title={selectedVideo.title}
+              onEnded={() => setIsVideoModalOpen(false)}
+              className="w-full"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

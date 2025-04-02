@@ -1,106 +1,126 @@
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { useWhatsNextRecommendation, Video } from "@/utils/recommendationEngine";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, PlayCircle, Clock, BookmarkPlus } from "lucide-react";
-import { useWhatsNextRecommendation, type Video } from "@/utils/recommendationEngine";
+import { PlayCircle, Clock } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatDistanceToNow } from "date-fns";
 import VideoPlayer from "@/components/video/VideoPlayer";
-import { useToast } from "@/hooks/use-toast";
 
-const WhatsNextFeature = () => {
+interface WhatsNextFeatureProps {
+  onVideoClick?: (video: Video) => void;
+}
+
+const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
   const { nextVideo, loading } = useWhatsNextRecommendation();
   const [isPlaying, setIsPlaying] = useState(false);
-  const { toast } = useToast();
-
+  
   if (loading) {
     return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <div className="mr-2">
-              <Clock className="h-5 w-5 text-strike-500" />
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Continue Learning</h2>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="flex flex-col md:flex-row">
+              <Skeleton className="aspect-video w-full md:w-2/3" />
+              <div className="p-4 md:p-6 md:w-1/3">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2 mb-6" />
+                <Skeleton className="h-10 w-full" />
+              </div>
             </div>
-            What's Next
-          </CardTitle>
-          <CardDescription>
-            Finding your next learning recommendation...
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-strike-500" />
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (!nextVideo) {
-    return null; // Don't show anything if no recommendation
+    return null;
   }
-
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  
+  const formattedDate = formatDistanceToNow(new Date(nextVideo.uploadDate), { addSuffix: true });
+  const viewCount = nextVideo.views >= 1000000
+    ? `${(nextVideo.views / 1000000).toFixed(1)}M views`
+    : nextVideo.views >= 1000
+    ? `${(nextVideo.views / 1000).toFixed(1)}K views`
+    : `${nextVideo.views} views`;
+  
+  const handlePlayClick = () => {
+    if (onVideoClick) {
+      onVideoClick(nextVideo);
+    } else {
+      setIsPlaying(true);
+    }
   };
-
-  const handlePlay = () => {
-    setIsPlaying(true);
-  };
-
-  const handleSaveForLater = () => {
-    toast({
-      title: "Video saved",
-      description: "This video has been saved to your Watch Later playlist.",
-    });
-  };
-
+  
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <div className="mr-2">
-            <Clock className="h-5 w-5 text-strike-500" />
+    <div className="mb-8">
+      <h2 className="text-xl font-semibold mb-4">Continue Learning</h2>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex flex-col md:flex-row">
+            <div className="relative w-full md:w-2/3">
+              {isPlaying && nextVideo.videoUrl ? (
+                <VideoPlayer 
+                  src={nextVideo.videoUrl}
+                  thumbnail={nextVideo.thumbnail}
+                  title={nextVideo.title}
+                  autoPlay={true}
+                  className="w-full aspect-video"
+                />
+              ) : (
+                <div 
+                  className="relative w-full aspect-video cursor-pointer"
+                  onClick={handlePlayClick}
+                >
+                  <img 
+                    src={nextVideo.thumbnail || '/placeholder.svg'} 
+                    alt={nextVideo.title}
+                    className="w-full h-full object-cover" 
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <PlayCircle className="w-16 h-16 text-white" />
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                    {Math.floor(nextVideo.duration / 60)}:{String(nextVideo.duration % 60).padStart(2, '0')}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 md:p-6 md:w-1/3 flex flex-col">
+              <h3 className="text-lg font-semibold mb-1">{nextVideo.title}</h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                {nextVideo.teacher.name} • {viewCount} • {formattedDate}
+              </p>
+              <p className="text-sm mb-4">
+                Continue where you left off in this lesson about {nextVideo.topics.join(", ")}.
+              </p>
+              
+              <div className="mt-auto space-y-2">
+                <Button 
+                  onClick={handlePlayClick} 
+                  className="w-full"
+                >
+                  <PlayCircle className="mr-2 h-4 w-4" />
+                  Play Now
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  Save for Later
+                </Button>
+              </div>
+            </div>
           </div>
-          What's Next
-        </CardTitle>
-        <CardDescription>
-          Based on your learning journey, we recommend:
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="relative">
-          <VideoPlayer
-            src={nextVideo.videoUrl || "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"}
-            thumbnail={nextVideo.thumbnail}
-            title={nextVideo.title}
-            autoPlay={false}
-            onEnded={() => setIsPlaying(false)}
-          />
-        </div>
-        <div className="p-4">
-          <h3 className="font-medium text-lg line-clamp-2">{nextVideo.title}</h3>
-          <div className="flex items-center mt-2 text-sm text-muted-foreground">
-            <span>{nextVideo.teacher.name}</span>
-            <span className="mx-2">•</span>
-            <span>{nextVideo.views.toLocaleString()} views</span>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between border-t pt-4">
-        <Button variant="outline" size="sm" onClick={handleSaveForLater}>
-          <BookmarkPlus className="mr-2 h-4 w-4" />
-          Save for later
-        </Button>
-        <Button 
-          className="bg-strike-500 hover:bg-strike-600" 
-          size="sm" 
-          onClick={handlePlay}
-        >
-          <PlayCircle className="mr-2 h-4 w-4" />
-          Watch Now
-        </Button>
-      </CardFooter>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
