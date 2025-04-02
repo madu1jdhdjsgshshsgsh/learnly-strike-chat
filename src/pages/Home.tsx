@@ -56,7 +56,12 @@ const Home = () => {
   }, [videos, activeSubCategory]);
 
   const handleVideoClick = (video: Video) => {
-    setSelectedVideo(video);
+    // Ensure the video has a thumbnail before setting it
+    const videoWithThumbnail = {
+      ...video,
+      thumbnail: video.thumbnail || DEFAULT_THUMBNAILS[Math.floor(Math.random() * DEFAULT_THUMBNAILS.length)]
+    };
+    setSelectedVideo(videoWithThumbnail);
     setIsVideoModalOpen(true);
   };
 

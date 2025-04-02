@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useWhatsNextRecommendation, Video } from "@/utils/recommendationEngine";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,7 +48,9 @@ const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
     return null;
   }
   
-  const thumbnail = nextVideo.thumbnail || DEFAULT_THUMBNAILS[0];
+  const randomIndex = Math.floor(Math.random() * DEFAULT_THUMBNAILS.length);
+  const thumbnail = nextVideo.thumbnail || DEFAULT_THUMBNAILS[randomIndex];
+  
   const formattedDate = formatDistanceToNow(new Date(nextVideo.uploadDate), { addSuffix: true });
   const viewCount = nextVideo.views >= 1000000
     ? `${(nextVideo.views / 1000000).toFixed(1)}M views`
@@ -96,6 +97,11 @@ const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
                     alt={nextVideo.title}
                     className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${!imageLoaded ? 'opacity-0' : ''}`}
                     onLoad={() => setImageLoaded(true)}
+                    onError={(e) => {
+                      const fallbackIndex = Math.floor(Math.random() * DEFAULT_THUMBNAILS.length);
+                      (e.target as HTMLImageElement).src = DEFAULT_THUMBNAILS[fallbackIndex];
+                      setImageLoaded(true);
+                    }}
                   />
                   
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -108,7 +114,6 @@ const WhatsNextFeature = ({ onVideoClick }: WhatsNextFeatureProps) => {
                     {Math.floor(nextVideo.duration / 60)}:{String(nextVideo.duration % 60).padStart(2, '0')}
                   </div>
                   
-                  {/* Title overlay at the bottom for small screens */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent md:hidden">
                     <h3 className="text-white text-lg font-semibold drop-shadow-md">
                       {nextVideo.title}
