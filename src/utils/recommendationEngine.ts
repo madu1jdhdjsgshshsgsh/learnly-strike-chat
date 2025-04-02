@@ -6,6 +6,7 @@ export interface Video {
   id: string;
   title: string;
   thumbnail: string;
+  videoUrl?: string; // Adding videoUrl as an optional property
   teacher: {
     id: string;
     name: string;
@@ -65,6 +66,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '1',
     title: 'Algebra Fundamentals',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
     teacher: { id: 'teacher1', name: 'Dr. Smith', avatar: '/placeholder.svg' },
     duration: 1800,
     views: 15000,
@@ -76,6 +78,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '2',
     title: 'Introduction to Python',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
     teacher: { id: 'teacher2', name: 'Prof. Johnson', avatar: '/placeholder.svg' },
     duration: 2400,
     views: 25000,
@@ -86,6 +89,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '3',
     title: 'Chemistry Basics',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
     teacher: { id: 'teacher3', name: 'Ms. Williams', avatar: '/placeholder.svg' },
     duration: 1500,
     views: 10000,
@@ -97,6 +101,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '4',
     title: 'Quick Python Loops',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
     teacher: { id: 'teacher2', name: 'Prof. Johnson', avatar: '/placeholder.svg' },
     duration: 180,
     views: 35000,
@@ -108,6 +113,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '5',
     title: 'Algebra Quick Tips',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
     teacher: { id: 'teacher1', name: 'Dr. Smith', avatar: '/placeholder.svg' },
     duration: 210,
     views: 40000,
@@ -120,6 +126,7 @@ const MOCK_VIDEOS: Video[] = [
     id: '6',
     title: 'Understanding DNA',
     thumbnail: '/placeholder.svg',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     teacher: { id: 'teacher3', name: 'Ms. Williams', avatar: '/placeholder.svg' },
     duration: 1200,
     views: 18000,
