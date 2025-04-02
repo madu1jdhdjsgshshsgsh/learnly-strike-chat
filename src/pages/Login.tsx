@@ -24,7 +24,7 @@ const Login = () => {
           if (error) throw error;
           
           // If user has no preferences set, redirect to onboarding
-          if (!profiles?.grade && !profiles?.topics) {
+          if (!profiles || (!profiles.hasOwnProperty('grade') && !profiles.hasOwnProperty('topics'))) {
             navigate('/onboarding');
           } else {
             navigate('/home');

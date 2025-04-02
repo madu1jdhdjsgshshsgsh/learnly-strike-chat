@@ -5,7 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreVertical, Clock } from "lucide-react";
+import { MoreVertical, Clock, PlayCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ interface VideoCardProps {
   duration: string;
   className?: string;
   isSaved?: boolean;
+  onClick?: () => void;
 }
 
 const VideoCard = ({
@@ -38,8 +39,10 @@ const VideoCard = ({
   duration,
   className,
   isSaved = false,
+  onClick,
 }: VideoCardProps) => {
   const [saved, setSaved] = useState(isSaved);
+  const [isHovering, setIsHovering] = useState(false);
   
   const formattedViews = views >= 1000000
     ? `${(views / 1000000).toFixed(1)}M views`
@@ -49,21 +52,41 @@ const VideoCard = ({
   
   const publishedTime = formatDistanceToNow(publishedAt, { addSuffix: true });
   
+  const handleThumbnailClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onClick) {
+      onClick();
+    }
+  };
+  
   return (
     <Card className={cn("border-none shadow-none", className)}>
       <div className="space-y-2">
-        <Link to={`/video/${id}`} className="block">
+        <div 
+          className="block cursor-pointer"
+          onClick={handleThumbnailClick}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
           <div className="relative aspect-video rounded-md overflow-hidden">
             <img
-              src={thumbnail}
+              src={thumbnail || "https://images.unsplash.com/photo-1591615666958-6732163cdb41?auto=format&fit=crop&q=80"}
               alt={title}
-              className="w-full h-full object-cover transition-transform hover:scale-105"
+              className={cn(
+                "w-full h-full object-cover transition-transform", 
+                isHovering ? "scale-105" : ""
+              )}
             />
+            {isHovering && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity">
+                <PlayCircle className="h-12 w-12 text-white" />
+              </div>
+            )}
             <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
               {duration}
             </div>
           </div>
-        </Link>
+        </div>
         <div className="flex gap-3 pt-2">
           <Link to={`/channel/${channelName.toLowerCase().replace(/\s+/g, '-')}`} className="flex-shrink-0">
             <Avatar className="h-9 w-9">
@@ -74,9 +97,12 @@ const VideoCard = ({
             </Avatar>
           </Link>
           <div className="flex-1 min-w-0">
-            <Link to={`/video/${id}`} className="block">
+            <button 
+              onClick={onClick}
+              className="block w-full text-left"
+            >
               <h3 className="font-medium line-clamp-2 hover:text-strike-600">{title}</h3>
-            </Link>
+            </button>
             <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
               <Link to={`/channel/${channelName.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-foreground">
                 {channelName}
