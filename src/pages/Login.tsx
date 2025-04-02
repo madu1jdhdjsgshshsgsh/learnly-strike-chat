@@ -31,8 +31,8 @@ const Login = () => {
           }
         } catch (error) {
           console.error('Error checking onboarding status:', error);
-          // If there's an error, still redirect to home
-          navigate('/home');
+          // If there's an error, still redirect to onboarding
+          navigate('/onboarding');
         }
       }
     };
